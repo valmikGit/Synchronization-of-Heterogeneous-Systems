@@ -82,15 +82,15 @@ for inst in instructions:
 
     elif inst["operation"] == 'SET':
         if inst["db1"] == 'MONGODB':
-            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"])
+            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"], ts=inst["timestamp"])
             # Add mongo connector
 
         elif inst["db1"] == 'POSTGRESQL':
-            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"])
+            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"], ts=inst["timestamp"])
             # Add postgresql connector
 
         elif inst["db1"] == 'HIVE':
-            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"])
+            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"], ts=inst["timestamp"])
             # Add hive connector
 
     elif inst["operation"] == 'MERGE':
