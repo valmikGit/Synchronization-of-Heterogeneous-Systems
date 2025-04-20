@@ -4,7 +4,7 @@ import json
 from MongoDB_connect import Mongodb_connect
 from postgresql_connector import connect_to_postgresql, disconnect_from_postgresql
 
-conn, cursor = connect_to_postgresql()
+conn, cursor = connect_to_postgresql('mydb','myuser','12341')
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: defaultdict(str))
