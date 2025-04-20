@@ -4,9 +4,9 @@ import json
 def parse_testcase_file(file_path):
     instructions = []
 
-    mongo_logger = open('oplogs.mongo', 'a')
-    hive_logger = open('oplogs.hive', 'a')
-    postgresql_logger = open('oplogs.postgresql', 'a')
+    mongo_logger = open('oplogs.mongo', 'w')
+    hive_logger = open('oplogs.hive', 'w')
+    postgresql_logger = open('oplogs.postgresql', 'w')
 
     with open(file_path, 'r') as file:
         for idx, line in enumerate(file):
