@@ -1,6 +1,23 @@
 import csv
 from collections import defaultdict
 
+
+
+
+
+def MongoDB_connect():
+    uri = "mongodb+srv://mittalvaibhav277:GLP5SHfCbxQdiWPm@cluster0.xghzn4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+
+    # Create a new client and connect to the server
+    client = MongoClient(uri, server_api=ServerApi('1'))
+
+    # Send a ping to confirm a successful connection
+    try:
+        client.admin.command('ping')
+        print("Pinged your deployment. You successfully connected to MongoDB!")
+    except Exception as e:
+        print(e)
+
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: defaultdict(str))
 hive_logs = defaultdict(lambda: defaultdict(str))
@@ -32,7 +49,7 @@ db_logs_map = {
     "MONGODB": mongo_logs,
     "POSTGRESQL": postgresql_logs
 }
-
+MongoDB_connect()
 print("Printing mongo logs")
 print(mongo_logs)
 print("Printing hive logs")
