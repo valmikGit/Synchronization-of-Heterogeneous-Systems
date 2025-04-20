@@ -1,7 +1,7 @@
 import csv
 from collections import defaultdict
 import json
-from MongoDB_connect import Mongodb_connect
+from MongoDB_connect import MongoDBHandler
 from postgresql_connector import connect_to_postgresql, disconnect_from_postgresql
 
 conn, cursor = connect_to_postgresql('mydb','myuser','12341')
@@ -33,14 +33,24 @@ with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
         postgresql_logs[key] = (0, "")
 
 db_logs_map = {
-    "HIVE": hive_logs,
-    "MONGODB": mongo_logs,
-    "POSTGRESQL": postgresql_logs
+    'HIVE': hive_logs,
+    'MONGODB': mongo_logs,
+    'POSTGRESQL': postgresql_logs
 }
 
-def db_set(db_name:str, pk:tuple, value:str, ts:int):
-    Mongodb_connect()
-    db_logs_map[db_name][pk] = (ts, value)
+mongo_handler = MongoDBHandler()
+
+# Example db_logs_map dictionary for fallback in-memory loging
+
+def db_set(db_name: str, pk: tuple, value: str, ts: int):
+    if db_name == "MONGODB":
+        mongo_handler.set("my_database", "my_collection", pk, value, ts)
+    else:
+        db_logs_map[db_name][pk] = (ts, value)
+
+# def db_set(db_name:str, pk:tuple, value:str, ts:int):
+#     Mongodb_connect()
+#     db_logs_map[db_name][pk] = (ts, value)
     # Add appropriate connector
 
 def merge(db1:str, db2:str, ts:int)->list:
