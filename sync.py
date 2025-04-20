@@ -52,3 +52,9 @@ def merge(db1:str, db2:str, ts:int):
     for pk in primary_keys:
         if(db2_logs[pk][0] > db1_logs[pk][0]):
             db_set(db_name=db1, pk=pk, value=db2_logs[pk][1], ts=ts)
+
+def db_get(db_name:str, pk:tuple):
+    """
+    GET the grade for the given primary key tuple.
+    """
+    pass
