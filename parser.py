@@ -1,4 +1,5 @@
 import re
+import json
 
 def parse_testcase_file(file_path):
     instructions = []
@@ -57,8 +58,12 @@ def parse_testcase_file(file_path):
 
     return instructions
 
-# Example usage
+# Parse instructions
 parsed_instructions = parse_testcase_file("example_testcase.in")
 
-for instr in parsed_instructions:
-    print(instr)
+# Save to JSON file
+with open("parsed_instructions.json", "w") as json_file:
+    json.dump(parsed_instructions, json_file, indent=4)
+
+# Optional: print to confirm
+print("Instructions saved to parsed_instructions.json")
