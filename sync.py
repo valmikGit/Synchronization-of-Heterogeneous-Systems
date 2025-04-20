@@ -1,6 +1,7 @@
 import csv
 from collections import defaultdict
 import json
+from MongoDB_connect import Mongodb_connect
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: defaultdict(str))
@@ -33,23 +34,6 @@ db_logs_map = {
     "MONGODB": mongo_logs,
     "POSTGRESQL": postgresql_logs
 }
-
-# print("Printing mongo logs")
-# print(mongo_logs)
-# print("Printing hive logs")
-# print(hive_logs)
-# print("Printing postgresql logs")
-# print(postgresql_logs)
-# print("Printing primary keys")
-# print(primary_keys)
-# print("Printing mongo logs")
-# print(mongo_logs)
-# print("Printing hive logs")
-# print(hive_logs)
-# print("Printing postgresql logs")
-# print(postgresql_logs)
-# print("Printing primary keys")
-# print(primary_keys)
 
 def db_set(db_name:str, pk:tuple, value:str, ts:int):
     Mongodb_connect()
