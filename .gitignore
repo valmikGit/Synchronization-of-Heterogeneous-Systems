@@ -3,6 +3,8 @@ nosqlenv
 *.json
 .qodo
 *.pyc
-*.mongo
+*.mongodb
 *.postgresql
 *.hive
+*.txt
+*.in
