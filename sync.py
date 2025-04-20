@@ -10,7 +10,7 @@ hive_logs = defaultdict(lambda: defaultdict(str))
 postgresql_logs = defaultdict(lambda: defaultdict(str))
 
 # Path to your CSV file
-csv_file_path= 'student_course_grades.csv'  # Replace with your actual path
+csv_file_path = 'student_course_grades.csv'  # Replace with your actual path
 
 primary_keys = []
 

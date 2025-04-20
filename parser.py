@@ -4,6 +4,10 @@ import json
 def parse_testcase_file(file_path):
     instructions = []
 
+    mongo_logger = open('oplogs.mongo', 'a')
+    hive_logger = open('oplogs.hive', 'a')
+    postgresql_logger = open('oplogs.postgresql', 'a')
+
     with open(file_path, 'r') as file:
         for idx, line in enumerate(file):
             line = line.strip()
@@ -55,6 +59,28 @@ def parse_testcase_file(file_path):
                 'course_id': course_id,
                 'grade': grade
             })
+
+            if db1 == "MONGODB":
+                if operation == "SET":
+                    mongo_logger.write(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                elif operation == 'GET':
+                    mongo_logger.write(f"{db_timestamp}, {db1}.GET({student_id},{course_id})\n")
+            
+            elif db1 == "HIVE":
+                if operation == "SET":
+                    hive_logger.write(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                elif operation == 'GET':
+                    hive_logger.write(f"{db_timestamp}, {db1}.GET({student_id},{course_id})\n")
+
+            elif db1 == "POSTGRESQL":
+                if operation == "SET":
+                    postgresql_logger.write(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                elif operation == 'GET':
+                    postgresql_logger.write(f"{db_timestamp}, {db1}.GET({student_id},{course_id})\n")
+
+    mongo_logger.close()
+    postgresql_logger.close()
+    hive_logger.close()
 
     return instructions
 
