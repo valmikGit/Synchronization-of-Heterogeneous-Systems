@@ -2,3 +2,4 @@
 nosqlenv
 *.json
 .qodo
+*.pyc

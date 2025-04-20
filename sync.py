@@ -1,22 +1,8 @@
 import csv
 from collections import defaultdict
 
+from MongoDB_connect import Mongodb_connect
 
-
-
-
-def MongoDB_connect():
-    uri = "mongodb+srv://mittalvaibhav277:GLP5SHfCbxQdiWPm@cluster0.xghzn4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
-
-    # Create a new client and connect to the server
-    client = MongoClient(uri, server_api=ServerApi('1'))
-
-    # Send a ping to confirm a successful connection
-    try:
-        client.admin.command('ping')
-        print("Pinged your deployment. You successfully connected to MongoDB!")
-    except Exception as e:
-        print(e)
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: defaultdict(str))
@@ -49,17 +35,18 @@ db_logs_map = {
     "MONGODB": mongo_logs,
     "POSTGRESQL": postgresql_logs
 }
-MongoDB_connect()
-print("Printing mongo logs")
-print(mongo_logs)
-print("Printing hive logs")
-print(hive_logs)
-print("Printing postgresql logs")
-print(postgresql_logs)
-print("Printing primary keys")
-print(primary_keys)
+
+# print("Printing mongo logs")
+# print(mongo_logs)
+# print("Printing hive logs")
+# print(hive_logs)
+# print("Printing postgresql logs")
+# print(postgresql_logs)
+# print("Printing primary keys")
+# print(primary_keys)
 
 def db_set(db_name:str, pk:tuple, value:str, ts:int):
+    Mongodb_connect()
     db_logs_map[db_name][pk] = (ts, value)
 
 def merge(db1:str, db2:str, ts:int):
@@ -75,3 +62,6 @@ def db_get(db_name:str, pk:tuple):
     GET the grade for the given primary key tuple.
     """
     pass
+
+
+db_set("HIVE", ("SID103", "CSE016"), "A", 1)
