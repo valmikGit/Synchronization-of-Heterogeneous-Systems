@@ -2,9 +2,7 @@ import csv
 from collections import defaultdict
 import json
 from MongoDB_connect import MongoDBHandler
-from postgresql_connector import connect_to_postgresql, disconnect_from_postgresql
-
-conn, cursor = connect_to_postgresql('mydb','myuser','12341')
+from postgresql_connector import PostgreSQLHandler
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: defaultdict(str))

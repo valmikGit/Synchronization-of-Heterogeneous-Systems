@@ -1,23 +1,73 @@
 import psycopg2
+from psycopg2 import sql
 
-# Connection parameters
-host = "localhost"
-port = 5432
-def connect_to_postgresql(database="doshte", user="nande", password="050309"):
-    conn=None
-    cursor=None
-    try:
-        conn = psycopg2.connect(host=host,port=port,dbname=database,user=user,password=password)
-        print("Connected to PostgreSQL successfully!")
-        cursor = conn.cursor()
-        return conn, cursor
-    except Exception as e:
-        print("Connection failed:", e)
-        return conn, cursor
+class PostgreSQLHandler:
+    def __init__(self, database: str = "doshte", user: str = "nande", password: str = "050309"):
+        self.host = "localhost"
+        self.port = "5432"
+        self.database = database
+        self.user = user
+        self.password = password
+        self.connection = None
+        self.cursor = None
+        self.connect()
 
-def disconnect_from_postgresql(conn):
-    if cursor:
-        cursor.close()
-    if conn:
-        conn.close()
-        print("Disconnected from PostgreSQL successfully!")
+    def connect(self):
+        try:
+            # Establish the connection
+            self.connection = psycopg2.connect(
+                host=self.host,
+                port=self.port,
+                dbname=self.database,
+                user=self.user,
+                password=self.password
+            )
+            self.cursor = self.connection.cursor()
+            print("Connected to PostgreSQL successfully!")
+        except Exception as e:
+            print("Connection failed:", e)
+
+    def set(self, table_name: str, pk: tuple, value: str, ts: int):
+        try:
+            # Construct the SQL query
+            query = sql.SQL("""
+                INSERT INTO {table} (pk, value, ts)
+                VALUES (%s, %s, %s)
+                ON CONFLICT (pk) 
+                DO UPDATE SET value = EXCLUDED.value, ts = EXCLUDED.ts;
+            """).format(table=sql.Identifier(table_name))
+            
+            # Execute the query
+            self.cursor.execute(query, (pk, value, ts))
+            self.connection.commit()
+            print(f"Data inserted/updated into {table_name} successfully!")
+        except Exception as e:
+            print("Set operation failed:", e)
+
+    def get(self, table_name: str, pk: tuple):
+        try:
+            # Construct the SQL query
+            query = sql.SQL("SELECT * FROM {table} WHERE pk = %s").format(table=sql.Identifier(table_name))
+            
+            # Execute the query
+            self.cursor.execute(query, (pk,))
+            result = self.cursor.fetchone()
+            
+            if result:
+                print(f"Found data: {result}")
+                return result
+            else:
+                print("No data found for the given pk.")
+                return None
+        except Exception as e:
+            print("Get operation failed:", e)
+            return None
+    def disconnect(self):
+        try:
+            if self.cursor:
+                self.cursor.close()
+            if self.connection:
+                self.connection.close()
+            print("Disconnected from PostgreSQL.")
+        except Exception as e:
+            print("Disconnection failed:", e)
