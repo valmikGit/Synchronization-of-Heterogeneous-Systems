@@ -42,8 +42,17 @@ db_logs_map = {
 # print(postgresql_logs)
 # print("Printing primary keys")
 # print(primary_keys)
+# print("Printing mongo logs")
+# print(mongo_logs)
+# print("Printing hive logs")
+# print(hive_logs)
+# print("Printing postgresql logs")
+# print(postgresql_logs)
+# print("Printing primary keys")
+# print(primary_keys)
 
 def db_set(db_name:str, pk:tuple, value:str, ts:int):
+    Mongodb_connect()
     db_logs_map[db_name][pk] = (ts, value)
     # Add appropriate connector
 
