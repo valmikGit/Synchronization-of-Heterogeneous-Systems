@@ -1,5 +1,6 @@
 import csv
 from collections import defaultdict
+import json
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: defaultdict(str))
@@ -33,19 +34,20 @@ db_logs_map = {
     "POSTGRESQL": postgresql_logs
 }
 
-print("Printing mongo logs")
-print(mongo_logs)
-print("Printing hive logs")
-print(hive_logs)
-print("Printing postgresql logs")
-print(postgresql_logs)
-print("Printing primary keys")
-print(primary_keys)
+# print("Printing mongo logs")
+# print(mongo_logs)
+# print("Printing hive logs")
+# print(hive_logs)
+# print("Printing postgresql logs")
+# print(postgresql_logs)
+# print("Printing primary keys")
+# print(primary_keys)
 
 def db_set(db_name:str, pk:tuple, value:str, ts:int):
     db_logs_map[db_name][pk] = (ts, value)
+    # Add appropriate connector
 
-def merge(db1:str, db2:str, ts:int):
+def merge(db1:str, db2:str, ts:int)->list:
     db1_logs = db_logs_map[db1]
     db2_logs = db_logs_map[db2]
 
@@ -58,3 +60,58 @@ def db_get(db_name:str, pk:tuple):
     GET the grade for the given primary key tuple.
     """
     pass
+
+def parse_json_instructions(file_path:str)->list:
+    # Open and load the JSON data
+    data = None
+    with open(file_path, 'r') as file:
+        data = json.load(file)
+
+    # Print the loaded data
+    return data
+
+instructions = parse_json_instructions("parsed_instructions.json")
+
+for inst in instructions:
+    if inst["operation"] == 'GET':
+        if inst["db1"] == 'MONGODB':
+            # Add mongo connector
+            pass
+        elif inst["db1"] == 'POSTGRESQL':
+            # Add postgresql connector
+            pass
+        elif inst["db1"] == 'HIVE':
+            # Add hive connector
+            pass
+
+    elif inst["operation"] == 'SET':
+        if inst["db1"] == 'MONGODB':
+            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"])
+            # Add mongo connector
+
+        elif inst["db1"] == 'POSTGRESQL':
+            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"])
+            # Add postgresql connector
+
+        elif inst["db1"] == 'HIVE':
+            db_set(db_name=inst["db1"], pk=(inst["student_id"], inst["course_id"]), value=inst["grade"])
+            # Add hive connector
+
+    elif inst["operation"] == 'MERGE':
+        if inst["db1"] == 'MONGODB' and inst["db2"] == 'POSTGRESQL':
+            merge(db1=inst["db1"], db2=inst["db2"], ts=inst["timestamp"])
+        
+        elif inst["db1"] == 'POSTGRESQL' and inst["db2"] == 'MONGODB':
+            merge(db1=inst["db1"], db2=inst["db2"], ts=inst["timestamp"])
+        
+        elif inst["db1"] == 'POSTGRESQL' and inst["db2"] == 'HIVE':
+            merge(db1=inst["db1"], db2=inst["db2"], ts=inst["timestamp"])
+        
+        elif inst["db1"] == 'HIVE' and inst["db2"] == 'POSTGRESQL':
+            merge(db1=inst["db1"], db2=inst["db2"], ts=inst["timestamp"])
+        
+        elif inst["db1"] == 'MONGODB' and inst["db2"] == 'HIVE':
+            merge(db1=inst["db1"], db2=inst["db2"], ts=inst["timestamp"])
+
+        elif inst["db1"] == 'HIVE' and inst["db2"] == 'MONGODB':
+            merge(db1=inst["db1"], db2=inst["db2"], ts=inst["timestamp"])
