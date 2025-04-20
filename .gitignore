@@ -1,3 +1,4 @@
 *.csv
 nosqlenv
 *.json
+.qodo
