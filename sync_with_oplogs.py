@@ -82,12 +82,18 @@ def read_oplogs(db:str):
 
 
 def merge(db1:str, db2:str, ts:int)->list:
+    """
+    There are 2 approaches which can be used to update the timestamp after a merge operation:
+    a) Use the timestamp when this merge was done.
+    b) Use the latest timestamp between the two timestamps corresponding to the two databases under consideration.
+    Here, we have used option b. 
+    """
     db1_logs = db_logs_map[db1]
     db2_logs = db_logs_map[db2]
 
     for pk in primary_keys:
         if(db2_logs[pk][0] > db1_logs[pk][0]):
-            db_set(db_name=db1, pk=pk, value=db2_logs[pk][1], ts=ts)
+            db_set(db_name=db1, pk=pk, value=db2_logs[pk][1], ts=db2_logs[pk][0])
 
 def db_get(db_name:str, pk:tuple)->str:
     if pk not in primary_keys:
