@@ -3,3 +3,4 @@ nosqlenv
 *.json
 .qodo
 *.pyc
+upload_csv.py

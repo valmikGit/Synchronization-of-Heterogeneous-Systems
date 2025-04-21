@@ -38,12 +38,14 @@ db_logs_map = {
 
 # Example db_logs_map dictionary for fallback in-memory loging
 
-
+postgre_handler=PostgreSQLHandler()
 mongo_handler=MongoDBHandler()
 
 def db_set(db_name: str, pk: tuple, value: str, ts: int):
     if db_name == "MONGODB":
         mongo_handler.set("my_database", "my_collection", pk, value, ts)
+    elif db_name == "POSTGRESQL":
+        postgre_handler.set("student_course_grades", pk, value, ts)
     else:
         db_logs_map[db_name][pk] = (ts, value)
 
