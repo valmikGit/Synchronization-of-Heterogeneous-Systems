@@ -3,4 +3,8 @@ nosqlenv
 *.json
 .qodo
 *.pyc
-upload_csv.py
+*.mongodb
+*.postgresql
+*.hive
+*.txt
+*.in

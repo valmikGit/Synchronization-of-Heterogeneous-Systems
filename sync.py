@@ -10,7 +10,7 @@ hive_logs = defaultdict(lambda: defaultdict(str))
 postgresql_logs = defaultdict(lambda: defaultdict(str))
 
 # Path to your CSV file
-csv_file_path= 'student_course_grades.csv'  # Replace with your actual path
+csv_file_path = 'student_course_grades.csv'  # Replace with your actual path
 
 primary_keys = []
 
@@ -43,9 +43,8 @@ mongo_handler=MongoDBHandler()
 
 def db_set(db_name: str, pk: tuple, value: str, ts: int):
     if db_name == "MONGODB":
-        mongo_handler.set("my_database", "my_collection", pk, value, ts)
-    elif db_name == "POSTGRESQL":
-        postgre_handler.set("student_course_grades", pk, value, ts)
+        mongo_handler.set("university_db", "grades_of_students", pk, value, ts)
+        db_logs_map[db_name][pk] = (ts, value)
     else:
         db_logs_map[db_name][pk] = (ts, value)
 
