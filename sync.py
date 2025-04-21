@@ -45,6 +45,8 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int):
     if db_name == "MONGODB":
         mongo_handler.set("university_db", "grades_of_students", pk, value, ts)
         db_logs_map[db_name][pk] = (ts, value)
+    elif db_name == "POSTGRESQL":
+        postgre_handler.set("student_course_grades", pk, value, ts)
     else:
         db_logs_map[db_name][pk] = (ts, value)
 

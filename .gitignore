@@ -8,3 +8,4 @@ nosqlenv
 *.hive
 *.txt
 *.in
+upload_csv.py
