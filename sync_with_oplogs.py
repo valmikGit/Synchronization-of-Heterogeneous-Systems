@@ -93,6 +93,9 @@ def merge(db1:str, db2:str, ts:int)->list:
 
     for pk in primary_keys:
         if(db2_logs[pk][0] > db1_logs[pk][0]):
+            db1_oplogs = open(f"oplogs.{db1.lower()}", "a")
+            db1_oplogs.write(f"{db2_logs[pk][0]}, {db1}.SET(({pk[0],pk[1]}), {db2_logs[pk][1]})")
+            db1_oplogs.close()   
             db_set(db_name=db1, pk=pk, value=db2_logs[pk][1], ts=db2_logs[pk][0])
 
 def db_get(db_name:str, pk:tuple)->str:
@@ -183,4 +186,4 @@ def parse_testcase_file(file_path):
     postgresql_logger.close()
     hive_logger.close()
 
-parse_testcase_file(file_path="example_testcase_2.in")
+parse_testcase_file(file_path="example_testcase.in")
