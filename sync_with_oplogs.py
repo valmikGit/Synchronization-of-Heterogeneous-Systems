@@ -6,6 +6,10 @@ import json
 from MongoDB_connect import MongoDBHandler
 from postgresql_connector import PostgreSQLHandler
 
+
+mongo_handler = MongoDBHandler()
+postgre_handler = PostgreSQLHandler()
+
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: (0, ""))
 hive_logs = defaultdict(lambda: (0, ""))
@@ -38,6 +42,8 @@ db_logs_map = {
     'MONGODB': mongo_logs,
     'POSTGRESQL': postgresql_logs
 }
+
+
 
 def db_set(db_name: str, pk: tuple, value: str, ts: int):
     if pk not in primary_keys:
@@ -102,7 +108,13 @@ def db_get(db_name:str, pk:tuple)->str:
     if pk not in primary_keys:
         print(f"{pk} not in primary keys.")
         return
-    return db_logs_map[db_name][pk]
+    if(db_name=="POSTGRESQL"):
+        return postgre_handler.get("student_course_grades", pk)
+    elif(db_name=="MONGODB"):
+        return mongo_handler.get("university_db", "grades_of_students", pk)
+    else: 
+        return hive_handler.get("student_course_grades", pk)
+    #return db_logs_map[db_name][pk]
 
 def parse_testcase_file(file_path):
     mongo_logger = open('oplogs.mongodb', 'w')
