@@ -48,7 +48,7 @@ class PostgreSQLHandler:
     def get(self, table_name: str, pk: tuple):
         try:
             # Define the composite PK columns for your table
-            pk_columns = ("student_id", "course_id")
+            pk_columns = ("student-ID", "course-id")
 
             if len(pk) != len(pk_columns):
                 raise ValueError(f"PK values count {len(pk)} doesn't match PK columns count {len(pk_columns)}.")
