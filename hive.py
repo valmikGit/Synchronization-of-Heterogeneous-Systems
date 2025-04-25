@@ -158,7 +158,7 @@ class Hive:
         self.destroy()
 
 if __name__ == "__main__":
-    hive_instance = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
+    hive_instance = Hive("student_grades", "localhost", 10000, "vaibhav", "CUSTOM", "Badminton@2468")
     hive_instance.create_table()
     hive_instance.insert_data(("IMT2023001", "CSC101"), "A")
     hive_instance.select_data()
