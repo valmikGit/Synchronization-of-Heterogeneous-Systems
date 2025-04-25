@@ -14,6 +14,9 @@ csv_file_path = 'student_course_grades.csv'  # Replace with your actual path
 
 primary_keys = []
 
+postgre_handler=PostgreSQLHandler()
+mongo_handler=MongoDBHandler()
+
 # Read the CSV and initialize logs
 with open(csv_file_path, mode='r', newline='', encoding='utf-8') as file:
     reader = csv.DictReader(file)
@@ -37,9 +40,6 @@ db_logs_map = {
 }
 
 # Example db_logs_map dictionary for fallback in-memory loging
-
-postgre_handler=PostgreSQLHandler()
-mongo_handler=MongoDBHandler()
 
 def db_set(db_name: str, pk: tuple, value: str, ts: int):
     if db_name == "MONGODB":
