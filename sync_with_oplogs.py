@@ -5,10 +5,12 @@ from collections import defaultdict
 import json
 from MongoDB_connect import MongoDBHandler
 from postgresql_connector import PostgreSQLHandler
+from hive import Hive
 
 
 mongo_handler = MongoDBHandler()
 postgre_handler = PostgreSQLHandler()
+hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: (0, ""))
@@ -54,13 +56,15 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int):
     elif(db_name=="MONGODB"):
         mongo_handler.set("university_db", "grades_of_students", pk, value, ts)
     else:
-        hive_handler.set("student_course_grades", pk, value, ts)
-    #db_logs_map[db_name][pk] = (ts, value)
+        hive_handler.update_data(pk, value)
+    db_logs_map[db_name][pk] = (ts, value)
 
-def read_oplogs(db:str):
+def read_oplogs(db: str):
     with open(f"oplogs.{db.lower()}", 'r') as file:
+        print(f"Reading oplogs for {db}")
         for idx, line in enumerate(file):
             line = line.strip()
+            print(f"Line {idx+1}: {line}")
             if not line:
                 continue  # Skip empty lines
 
@@ -76,7 +80,7 @@ def read_oplogs(db:str):
                     line = parts[1].strip()
 
             # Parse SET
-            elif 'SET' in line:
+            if 'SET' in line:
                 match = re.match(r'(\w+)\.SET\(\(([^,]+),([^)]+)\),\s*([^)]+)\)', line)
                 if match:
                     db1, student_id, course_id, grade = match.groups()
@@ -89,7 +93,10 @@ def read_oplogs(db:str):
                     db1, student_id, course_id = match.groups()
                     operation = 'GET'
 
+            print(f"operation = {operation}")
+
             if operation == 'SET':
+                print(f"SET: {db}({db_timestamp}) {student_id}, {course_id}, {grade}")
                 db_set(db_name=db, pk=(student_id, course_id), value=grade, ts=db_timestamp)
 
 
@@ -105,6 +112,7 @@ def merge(db1:str, db2:str, ts:int)->list:
 
     for pk in primary_keys:
         if(db2_logs[pk][0] > db1_logs[pk][0]):
+            print(f"Merge: {db1}({db1_logs[pk][0]}) < {db2}({db2_logs[pk][0]})")
             db1_oplogs = open(f"oplogs.{db1.lower()}", "a")
             db1_oplogs.write(f"{db2_logs[pk][0]}, {db1}.SET(({pk[0],pk[1]}), {db2_logs[pk][1]})")
             db1_oplogs.close()   
@@ -119,7 +127,7 @@ def db_get(db_name:str, pk:tuple)->str:
     elif(db_name=="MONGODB"):
         return mongo_handler.get("university_db", "grades_of_students", pk)
     else: 
-        return hive_handler.get("student_course_grades", pk)
+        return hive_handler.select_data("student_grades", pk)
     #return db_logs_map[db_name][pk]
 
 def parse_testcase_file(file_path):
@@ -204,4 +212,4 @@ def parse_testcase_file(file_path):
     postgresql_logger.close()
     hive_logger.close()
 
-parse_testcase_file(file_path="example_testcase.in")
+parse_testcase_file(file_path="example_testcase_3.in")
