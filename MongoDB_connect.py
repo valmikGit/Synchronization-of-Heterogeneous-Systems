@@ -50,7 +50,7 @@ class MongoDBHandler:
         collection = db[collection_name]
 
         # Construct the query based on the composite primary key (assuming it's (student_id, course_id))
-        query = {"student_id": pk[0], "course_id": pk[1]}
+        query = {"student-ID": pk[0], "course-id": pk[1]}
         # Perform the find operation
         return collection.find_one(query)
 
