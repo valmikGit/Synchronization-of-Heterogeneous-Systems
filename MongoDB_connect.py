@@ -49,10 +49,15 @@ class MongoDBHandler:
     def get(self, db_name: str, collection_name: str, pk: tuple):
         db = self.client[db_name]
         collection = db[collection_name]
+    def get(self, db_name: str, collection_name: str, pk: tuple):
+        db = self.client[db_name]
+        collection = db[collection_name]
 
         # Construct the query based on the composite primary key (assuming it's (student_id, course_id))
-        query = {"student-ID": pk[0], "course-id": pk[1]}
+        query = {"student_id": pk[0], "course_id": pk[1]}
 
+        # Perform the find operation
+        return collection.find_one(query)
         # Perform the find operation
         return collection.find_one(query)
 
