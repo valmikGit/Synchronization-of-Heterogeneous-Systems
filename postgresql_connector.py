@@ -47,21 +47,36 @@ class PostgreSQLHandler:
 
     def get(self, table_name: str, pk: tuple):
         try:
-            # Construct the SQL query
-            query = sql.SQL("SELECT * FROM {table} WHERE pk = %s").format(table=sql.Identifier(table_name))
-            
-            # Execute the query
-            self.cursor.execute(query, (pk,))
+            # Define the composite PK columns for your table
+            pk_columns = ("student_id", "course_id")
+
+            if len(pk) != len(pk_columns):
+                raise ValueError(f"PK values count {len(pk)} doesn't match PK columns count {len(pk_columns)}.")
+
+            # Construct the WHERE clause: "student_id = %s AND course_id = %s"
+            where_clause = sql.SQL(" AND ").join(
+                sql.Composed([sql.Identifier(col), sql.SQL(" = %s")]) for col in pk_columns
+            )
+
+            # SQL query: "SELECT * FROM table WHERE student_id = %s AND course_id = %s"
+            query = sql.SQL("SELECT * FROM {table} WHERE {conditions}").format(
+                table=sql.Identifier(table_name),
+                conditions=where_clause
+            )
+
+            # Execute the query with the primary key values
+            self.cursor.execute(query, pk)
             result = self.cursor.fetchone()
-            
+
             if result:
-                print(f" Found data: {result}")
+                print(f"Found data: {result}")
                 return result
             else:
-                print(" No data found for the given pk.")
+                print("No data found for the given PK.")
                 return None
+
         except Exception as e:
-            print(" Get operation failed:", e)
+            print("Get operation failed:", e)
             return None
 
     def disconnect(self):
