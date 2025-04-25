@@ -49,7 +49,13 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int):
     if pk not in primary_keys:
         print(f"{pk} not in primary keys.")
         return
-    db_logs_map[db_name][pk] = (ts, value)
+    if(db_name=="POSTGRESQL"):
+        postgre_handler.set("student_course_grades", pk, value, ts)
+    elif(db_name=="MONGODB"):
+        mongo_handler.set("university_db", "grades_of_students", pk, value, ts)
+    else:
+        hive_handler.set("student_course_grades", pk, value, ts)
+    #db_logs_map[db_name][pk] = (ts, value)
 
 def read_oplogs(db:str):
     with open(f"oplogs.{db.lower()}", 'r') as file:
