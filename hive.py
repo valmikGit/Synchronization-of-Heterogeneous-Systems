@@ -58,23 +58,70 @@ class Hive:
             self.cursor = self.conn.cursor()
             self.cursor.execute("SET hive.exec.dynamic.partition=true")
             self.cursor.execute("SET hive.exec.dynamic.partition.mode=nonstrict")
+            self.cursor.execute("SET hive.auto.convert.join=true")
+            self.cursor.execute("SET hive.exec.max.dynamic.partitions=200")
+            self.cursor.execute("SET hive.exec.max.dynamic.partitions.pernode=200")
         except Exception as e:
             print(f"Error connecting to Hive: {e}")
             self.destroy()
 
-    def create_table(self):
+    def load_csv(self, filename = 'student_course_grades.csv'):
+        try:
+            filepath = os.path.join(os.getcwd(), filename)
+            query = f"LOAD DATA LOCAL INPATH '{filepath}' INTO TABLE {self.temp_table}"
+            self.cursor.execute(query)
+            print(f"Data loaded from {filepath} into table {self.temp_table}.")
+        except Exception as e:
+            print(f"Error loading data: {e}")
+
+    def create_table(self, filename):
+        self.cursor.execute(f"DROP TABLE IF EXISTS {self.temp_table}")
         self.cursor.execute(f"DROP TABLE IF EXISTS {self.table_name}")
 
         self.cursor.execute(f"""
-            CREATE TABLE {self.table_name} (
+            CREATE TABLE {self.temp_table} (
+                `student-ID` STRING,
+                `course-id` STRING,
+                `roll no` STRING,
+                `email ID` STRING,
                 grade STRING
             )
-            PARTITIONED BY (student_id STRING, course_id STRING)
             ROW FORMAT DELIMITED
             FIELDS TERMINATED BY ','
             STORED AS TEXTFILE
             LOCATION '${self.current_directory}/mytables'
         """)
+
+        self.load_csv('student_course_grades.csv')
+
+        self.cursor.execute(f"""
+            CREATE TABLE {self.table_name} (
+                `roll no` STRING,
+                `email ID` STRING,
+                grade STRING
+            )
+            PARTITIONED BY (`student-ID` STRING, `course-id` STRING)
+            STORED AS PARQUET
+            LOCATION 'file://{os.path.abspath(os.path.join(self.current_directory, "mytables"))}'
+        """)
+
+        # Enable dynamic partitioning
+        self.cursor.execute("SET hive.exec.dynamic.partition = true")
+        self.cursor.execute("SET hive.exec.dynamic.partition.mode = nonstrict")
+
+        # Insert data: Include partition columns LAST in SELECT
+        self.cursor.execute(f"""
+            INSERT OVERWRITE TABLE {self.table_name}
+            PARTITION (`student-ID`, `course-id`)
+            SELECT 
+                `roll no`, 
+                `email ID`, 
+                grade,
+                `student-ID`,   -- Partition columns must be last
+                `course-id`     -- in the SELECT list
+            FROM {self.temp_table}
+        """)
+
         print(f"Partitioned table '{self.table_name}' created.")
 
     def load_data(self, grade = None):
@@ -91,7 +138,7 @@ class Hive:
             load_query = f"""
                 LOAD DATA LOCAL INPATH '{os.path.abspath(temp_filename)}' 
                 OVERWRITE INTO TABLE {self.table_name}
-                PARTITION (student_id='{self.student_id}', course_id='{self.course_id}')
+                PARTITION (`student-ID`='{self.student_id}', `course-id`='{self.course_id}')
             """
             self.cursor.execute(load_query)
         
@@ -114,16 +161,16 @@ class Hive:
     def select_data(self, studentId=None, courseId=None):
         try:
             if studentId and courseId:
-                query = f"SELECT * FROM {self.table_name} WHERE student_id = %s AND course_id = %s"
+                query = f"SELECT * FROM {self.table_name} WHERE `student-ID` = %s AND `course-id` = %s"
                 self.cursor.execute(query, (studentId, courseId))
             elif studentId:
-                query = f"SELECT * FROM {self.table_name} WHERE student_id = %s"
+                query = f"SELECT * FROM {self.table_name} WHERE `student-ID` = %s"
                 self.cursor.execute(query, (studentId,))
             elif courseId:
-                query = f"SELECT * FROM {self.table_name} WHERE course_id = %s"
+                query = f"SELECT * FROM {self.table_name} WHERE `course-id` = %s"
                 self.cursor.execute(query, (courseId,))
             else:
-                query = f"SELECT * FROM {self.table_name}"
+                query = f"SELECT * FROM {self.temp_table}"
                 self.cursor.execute(query)
 
             rows = self.cursor.fetchall()
@@ -159,18 +206,19 @@ class Hive:
 
 if __name__ == "__main__":
     hive_instance = Hive("student_grades", "localhost", 10000, "vaibhav", "CUSTOM", "Badminton@2468")
-    hive_instance.create_table()
-    hive_instance.insert_data(("IMT2023001", "CSC101"), "A")
+    hive_instance.create_table('student_course_grades.csv')
     hive_instance.select_data()
-    hive_instance.insert_data(("IMT2023001", "CSC102"), "B")
-    hive_instance.select_data()
-    hive_instance.insert_data(("IMT2023002", "CSC101"), "C")
-    hive_instance.select_data()
-    hive_instance.update_data(("IMT2023001", "CSC101"), "B")
-    hive_instance.select_data()
-    hive_instance.delete_data(("IMT2023001", "CSC101"))
-    hive_instance.select_data()
-    hive_instance.delete_data(("IMT2023001", "CSC102"))
-    hive_instance.delete_data(("IMT2023001", "CSC102"))
+    # hive_instance.insert_data(("IMT2023001", "CSC101"), "A")
+    # hive_instance.select_data()
+    # hive_instance.insert_data(("IMT2023001", "CSC102"), "B")
+    # hive_instance.select_data()
+    # hive_instance.insert_data(("IMT2023002", "CSC101"), "C")
+    # hive_instance.select_data()
+    # hive_instance.update_data(("IMT2023001", "CSC101"), "B")
+    # hive_instance.select_data()
+    # hive_instance.delete_data(("IMT2023001", "CSC101"))
+    # hive_instance.select_data()
+    # hive_instance.delete_data(("IMT2023001", "CSC102"))
+    # hive_instance.delete_data(("IMT2023001", "CSC102"))
     hive_instance.select_data()
     hive_instance.__del__()
