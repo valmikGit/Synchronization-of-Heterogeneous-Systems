@@ -7,5 +7,4 @@ nosqlenv
 *.postgresql
 *.hive
 *.txt
-*.in
 upload_csv.py
