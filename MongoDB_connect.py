@@ -46,15 +46,15 @@ class MongoDBHandler:
         else:
             print("Document matched but no change was made.")
 
-   def get(self, db_name: str, collection_name: str, pk: tuple):
-    db = self.client[db_name]
-    collection = db[collection_name]
+    def get(self, db_name: str, collection_name: str, pk: tuple):
+        db = self.client[db_name]
+        collection = db[collection_name]
 
-    # Construct the query based on the composite primary key (assuming it's (student_id, course_id))
-    query = {"student_id": pk[0], "course_id": pk[1]}
+        # Construct the query based on the composite primary key (assuming it's (student_id, course_id))
+        query = {"student_id": pk[0], "course_id": pk[1]}
 
-    # Perform the find operation
-    return collection.find_one(query)
+        # Perform the find operation
+        return collection.find_one(query)
 
     def insert_student_grade(self, db_name: str, collection_name: str, student_data: dict):
         db = self.client[db_name]
