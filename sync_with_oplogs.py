@@ -45,8 +45,6 @@ db_logs_map = {
     'POSTGRESQL': postgresql_logs
 }
 
-
-
 def db_set(db_name: str, pk: tuple, value: str, ts: int):
     if pk not in primary_keys:
         print(f"{pk} not in primary keys.")
@@ -62,6 +60,8 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int):
 def read_oplogs(db: str):
     with open(f"oplogs.{db.lower()}", 'r') as file:
         print(f"Reading oplogs for {db}")
+        content = file.read()
+        print(f"Content = {content}")
         for idx, line in enumerate(file):
             line = line.strip()
             print(f"Line {idx+1}: {line}")
@@ -96,8 +96,7 @@ def read_oplogs(db: str):
             print(f"operation = {operation}")
 
             if operation == 'SET':
-                print(f"SET: {db}({db_timestamp}) {student_id}, {course_id}, {grade}")
-                
+                print(f"SET: {db}({db_timestamp}) {student_id}, {course_id}, {grade}")      
                 db_set(db_name=db, pk=(student_id, course_id), value=grade, ts=db_timestamp)
         
 
@@ -188,10 +187,6 @@ def db_get(db_name:str, pk:tuple)->str:
     return db_logs_map[db_name][pk]
 
 def parse_testcase_file(file_path):
-    mongo_logger = open('oplogs.mongodb', 'w')
-    hive_logger = open('oplogs.hive', 'w')
-    postgresql_logger = open('oplogs.postgresql', 'w')
-
     with open(file_path, 'r') as file:
         for idx, line in enumerate(file):
             line = line.strip()
@@ -235,29 +230,41 @@ def parse_testcase_file(file_path):
             if db1 == "MONGODB":
                 if operation == "SET":
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
-                    db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    # db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    mongo_logger = open("oplogs.mongodb", "a")
                     mongo_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                    mongo_logger.close()
                 elif operation == 'GET':
                     print(f"{db_timestamp}, {db1}.GET({student_id},{course_id}) = {db_get(db_name=db1, pk=(student_id, course_id))}\n")
+                    mongo_logger = open("oplogs.mongodb", "a")
                     mongo_logger.write(f"{timestamp}, {db1}.GET({student_id},{course_id})\n")
+                    mongo_logger.close()
             
             elif db1 == "HIVE":
                 if operation == "SET":
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
-                    db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    # db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    hive_logger = open("oplogs.hive", "a")
                     hive_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                    hive_logger.close()
                 elif operation == 'GET':
                     print(f"{db_timestamp}, {db1}.GET({student_id},{course_id}) = {db_get(db_name=db1, pk=(student_id, course_id))}\n")
+                    hive_logger = open("oplogs.hive", "a")
                     hive_logger.write(f"{timestamp}, {db1}.GET({student_id},{course_id})\n")
+                    hive_logger.close()
 
             elif db1 == "POSTGRESQL":
                 if operation == "SET":
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
-                    db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    # db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    postgresql_logger = open("oplogs.postegresql", "a")
                     postgresql_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                    postgresql_logger.close()
                 elif operation == 'GET':
                     print(f"{db_timestamp}, {db1}.GET({student_id},{course_id}) = {db_get(db_name=db1, pk=(student_id, course_id))}\n")
+                    postgresql_logger = open("oplogs.postgresql", "a")
                     postgresql_logger.write(f"{timestamp}, {db1}.GET({student_id},{course_id})\n")
+                    postgresql_logger.close()
 
             if operation == "MERGE":
                 print(f"{db1}.MERGE({db2})\n")
@@ -267,13 +274,9 @@ def parse_testcase_file(file_path):
                 # merge(db1=db1, db2=db2, ts=timestamp)
                 if (db1 == "MONGODB"):
                     mongo_merge(db2=db2)
-                elif (db2 == "POSTGRESQL"):
+                elif (db1 == "POSTGRESQL"):
                     postgresql_merge(db2=db2)
-                elif (db2 == "HIVE"):
+                elif (db1 == "HIVE"):
                     hive_merge(db2=db2)
-
-    mongo_logger.close()
-    postgresql_logger.close()
-    hive_logger.close()
 
 parse_testcase_file(file_path="example_testcase_3.in")
