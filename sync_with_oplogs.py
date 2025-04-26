@@ -10,8 +10,8 @@ from hive import Hive
 
 mongo_handler = MongoDBHandler()
 postgre_handler = PostgreSQLHandler()
-hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
-hive_handler.create_table('student_course_grades.csv')
+# hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
+# hive_handler.create_table('student_course_grades.csv')
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: (0, ""))
@@ -55,7 +55,8 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int):
     elif(db_name=="MONGODB"):
         mongo_handler.set("university_db", "grades_of_students", pk, value, ts)
     else:
-        hive_handler.update_data(pk, value)
+        return
+        # hive_handler.update_data(pk, value)
     # db_logs_map[db_name][pk] = (ts, value)
 
 def read_oplogs(db: str):
@@ -184,7 +185,8 @@ def db_get(db_name:str, pk:tuple)->str:
     elif(db_name=="MONGODB"):
         return mongo_handler.get("university_db", "grades_of_students", pk)
     else: 
-        return hive_handler.select_data("student_grades", pk)
+        return
+        # return hive_handler.select_data("student_grades", pk)
     return db_logs_map[db_name][pk]
 
 def parse_testcase_file(file_path):
