@@ -1,12 +1,14 @@
 import re
 import json
+import os
 import csv
 from collections import defaultdict
 import json
 from MongoDB_connect import MongoDBHandler
 from postgresql_connector import PostgreSQLHandler
 from hive import Hive
-
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 mongo_handler = MongoDBHandler()
 postgre_handler = PostgreSQLHandler()
@@ -212,4 +214,45 @@ def parse_testcase_file(file_path):
     postgresql_logger.close()
     hive_logger.close()
 
-parse_testcase_file(file_path="example_testcase_3.in")
+# parse_testcase_file(file_path="example_testcase_3.in")
+
+app = Flask(__name__)
+CORS(app=app)
+
+
+# Set a folder where uploaded files will be saved
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'in'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    if file and allowed_file(file.filename):
+        # Save the file
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(file_path)
+
+        parse_testcase_file(file_path=file_path)
+
+        # You can also process the file here if needed
+
+        return jsonify({"message": f"File '{file.filename}' uploaded successfully."}), 200
+    else:
+        return jsonify({"error": "Invalid file type. Only .in files are allowed."}), 400
+
+if __name__ == "__main__":
+    app.run(debug=True)
