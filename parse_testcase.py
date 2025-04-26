@@ -6,20 +6,10 @@ from db_set import db_set
 from db_get import db_get
 
 def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler, db_logs_map, primary_keys):
-    mongo_logger = open('oplogs.mongodb', 'w')
-    hive_logger = open('oplogs.hive', 'w')
-    postgresql_logger = open('oplogs.postgresql', 'w')
-   
     system_handlers = {
         "MONGODB": mongo_handler,
         "HIVE": hive_handler,
         "POSTGRESQL": postgre_handler
-    }
-
-    loggers = {
-        "MONGODB": mongo_logger,
-        "HIVE": hive_logger,
-        "POSTGRESQL": postgresql_logger
     }
 
     with open(file_path, 'r') as file:
@@ -58,15 +48,24 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                     operation = 'GET'
 
             handler = system_handlers.get(db1)
-            logger = loggers.get(db1)
 
             if operation == "SET":
                 print(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})")
                 db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp,
                        mongo_handler=mongo_handler, hive_handler=hive_handler, postgre_handler=postgre_handler,
                        db_logs_map=db_logs_map, primary_keys=primary_keys)
-                if logger:
-                    logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                if db1 == "MONGODB":
+                    mongo_logger = open('oplogs.mongodb', 'a')
+                    mongo_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                    mongo_logger.close()
+                elif db1 == "POSTGRESQL":
+                    postgresql_logger = open('oplogs.postgresql', 'a')
+                    postgresql_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                    postgresql_logger.close()
+                elif db1 == "HIVE":
+                    hive_logger = open('oplogs.hive', 'a')
+                    hive_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
+                    hive_logger.close()
 
             elif operation == "GET":
                 if handler:
@@ -82,15 +81,21 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
 
                     print(f"{timestamp}, {db1}.GET({student_id},{course_id}) = {value}")
                     
-                    if logger:
-                        logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id})) = {value}\n")
+                    if db1 == "MONGODB":
+                        mongo_loggger = open('oplogs.mongodb', 'a')
+                        mongo_loggger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id}))\n")
+                        mongo_logger.close()
+                    elif db1 == "POSTGRESQL":
+                        postgresql_logger = open('oplogs.postgresql', 'a')
+                        postgresql_logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id}))\n")
+                        postgresql_logger.close()
+                    elif db1 == "HIVE":
+                        hive_logger = open('oplogs.hive', 'a')   
+                        hive_logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id})) = {value}\n")
+                        hive_logger.close()
 
 
             elif operation == "MERGE":
                 if handler:
                     print(f"{db1}.MERGE({db2})")
                     handler.merge(db2)
-
-    mongo_logger.close()
-    hive_logger.close()
-    postgresql_logger.close()

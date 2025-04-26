@@ -5,11 +5,12 @@ from read_oplogs import read_oplogs
 
 
 class MongoDBHandler:
-    def __init__(self, uri: str = "mongodb+srv://mittalvaibhav277:GLP5SHfCbxQdiWPm@cluster0.xghzn4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"):
+    def __init__(self, uri: str = "mongodb+srv://mittalvaibhav277:GLP5SHfCbxQdiWPm@cluster0.xghzn4m.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0", primary_keys=None):
         self.uri = uri
         self.client = None
         self.collection = None
         self.db = None
+        self.primary_keys = primary_keys
         self.connect()
 
     def connect(self):
@@ -72,6 +73,8 @@ class MongoDBHandler:
                         mongo_oplog.write(f"{latest_ts}, MONGODB.SET(({pk[0]},{pk[1]}), {latest_value})\n")
                         self.set("university_db", "grades_of_students", pk, latest_value, latest_ts)
                         print(f"Merged ({pk[0]}, {pk[1]}) from {other_system_name} into MongoDB at ts={latest_ts}")
+
+        mongo_oplog.close()
 
     def bulk_insert_students_from_csv(self, db_name: str, collection_name: str, csv_path: str):
         student_records = []

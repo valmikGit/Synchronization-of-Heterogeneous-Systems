@@ -57,7 +57,7 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int):
     else:
         return
         # hive_handler.update_data(pk, value)
-    # db_logs_map[db_name][pk] = (ts, value)
+    db_logs_map[db_name][pk] = (ts, value)
 
 def read_oplogs(db: str):
     with open(f"oplogs.{db.lower()}", 'r') as file:
@@ -148,7 +148,6 @@ def postgresql_merge(db2:str, db1="POSTGRESQL"):
     """
     db1_logs = db_logs_map[db1]
     db2_logs = db_logs_map[db2]
-    print(db2_logs)
 
     for pk in primary_keys:
         if(db2_logs[pk][0] > db1_logs[pk][0]):
@@ -260,7 +259,7 @@ def parse_testcase_file(file_path):
                 if operation == "SET":
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
-                    postgresql_logger = open("oplogs.postegresql", "a")
+                    postgresql_logger = open("oplogs.postgresql", "a")
                     postgresql_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     postgresql_logger.close()
                 elif operation == 'GET':

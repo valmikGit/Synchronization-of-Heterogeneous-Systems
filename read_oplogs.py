@@ -13,7 +13,6 @@ def read_oplogs(db: str) -> dict:
         print(f"Reading oplogs for {db}")
         for idx, line in enumerate(file):
             line = line.strip()
-            print(f"Line {idx+1}: {line}")
             if not line:
                 continue  # Skip empty lines
 
@@ -57,6 +56,4 @@ def read_oplogs(db: str) -> dict:
                 print(f"GET: {db_name} ({db_timestamp}) {student_id}, {course_id}")
                 # Usually GET is a read, so you may not want to modify `logs`
                 pass
-    print(logs)
-
     return logs

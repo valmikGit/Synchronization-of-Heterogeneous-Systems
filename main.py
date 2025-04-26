@@ -7,7 +7,7 @@ from hive import Hive
 from parse_testcase import parse_testcase_file
 
 
-mongo_handler = MongoDBHandler()
+# mongo_handler = MongoDBHandler()
 
 primary_keys = []
 
@@ -53,12 +53,14 @@ postgre_handler = PostgreSQLHandler(
     db_logs_map=db_logs_map
 )
 
-hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
+mongo_handler = MongoDBHandler(primary_keys=primary_keys)
+
+# hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
 
 parse_testcase_file(
     file_path='example_testcase_3.in',
     mongo_handler=mongo_handler,
-    hive_handler=hive_handler,
+    hive_handler=None,
     postgre_handler=postgre_handler,
     db_logs_map=db_logs_map,
     primary_keys=primary_keys)

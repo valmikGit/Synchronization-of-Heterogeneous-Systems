@@ -91,11 +91,13 @@ class PostgreSQLHandler:
             for pk in self.primary_keys:
                 if pk in other_logs:
                     if pk not in my_logs or other_logs[pk][0] > my_logs[pk][0]:
-                        print(other_logs[pk])[0]
+                        print(other_logs[pk][0])
                         latest_ts, latest_value = other_logs[pk]
                         pg_oplog.write(f"{latest_ts}, POSTGRESQL.SET(({pk[0]},{pk[1]}), {latest_value})\n")
                         self.set("student_course_grades", pk, latest_value, latest_ts)
                         print(f"Merged ({pk[0]}, {pk[1]}) from {other_system_name} into PostgreSQL at ts={latest_ts}")
+
+        pg_oplog.close()
 
     def disconnect(self):
         try:
