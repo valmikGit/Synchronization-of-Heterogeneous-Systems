@@ -7,11 +7,12 @@ import json
 from MongoDB_connect import MongoDBHandler
 from postgresql_connector import PostgreSQLHandler
 from hive import Hive
+from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 mongo_handler = MongoDBHandler()
 postgre_handler = PostgreSQLHandler()
 hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
-hive_handler.create_table('student_course_grades.csv')
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: (0, ""))
@@ -98,9 +99,7 @@ def read_oplogs(db: str):
 
             if operation == 'SET':
                 print(f"SET: {db}({db_timestamp}) {student_id}, {course_id}, {grade}")
-                
                 db_set(db_name=db, pk=(student_id, course_id), value=grade, ts=db_timestamp)
-        
 
 
 # def merge(db1:str, db2:str, ts:int)->list:
@@ -148,7 +147,6 @@ def postgresql_merge(db2:str, db1="POSTGRESQL"):
     """
     db1_logs = db_logs_map[db1]
     db2_logs = db_logs_map[db2]
-    print(db2_logs)
 
     for pk in primary_keys:
         if(db2_logs[pk][0] > db1_logs[pk][0]):
@@ -186,7 +184,7 @@ def db_get(db_name:str, pk:tuple)->str:
         return mongo_handler.get("university_db", "grades_of_students", pk)
     else: 
         return hive_handler.select_data("student_grades", pk)
-    return db_logs_map[db_name][pk]
+    #return db_logs_map[db_name][pk]
 
 def parse_testcase_file(file_path):
     mongo_logger = open('oplogs.mongodb', 'w')
@@ -264,7 +262,6 @@ def parse_testcase_file(file_path):
                 print(f"{db1}.MERGE({db2})\n")
                 read_oplogs(db=db1)
                 read_oplogs(db=db2)
-                
                 # merge(db1=db1, db2=db2, ts=timestamp)
                 if (db1 == "MONGODB"):
                     mongo_merge(db2=db2)
@@ -277,4 +274,45 @@ def parse_testcase_file(file_path):
     postgresql_logger.close()
     hive_logger.close()
 
-parse_testcase_file(file_path="example_testcase_4.in")
+# parse_testcase_file(file_path="example_testcase_3.in")
+
+app = Flask(__name__)
+CORS(app=app)
+
+
+# Set a folder where uploaded files will be saved
+UPLOAD_FOLDER = "uploads"
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Allowed file extensions
+ALLOWED_EXTENSIONS = {'in'}
+
+def allowed_file(filename):
+    return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+@app.route('/upload', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file part in the request"}), 400
+
+    file = request.files['file']
+
+    if file.filename == '':
+        return jsonify({"error": "No file selected"}), 400
+
+    if file and allowed_file(file.filename):
+        # Save the file
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], file.filename)
+        file.save(file_path)
+
+        parse_testcase_file(file_path=file_path)
+
+        # You can also process the file here if needed
+
+        return jsonify({"message": f"File '{file.filename}' uploaded successfully."}), 200
+    else:
+        return jsonify({"error": "Invalid file type. Only .in files are allowed."}), 400
+
+if __name__ == "__main__":
+    app.run(debug=True)
