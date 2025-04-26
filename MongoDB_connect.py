@@ -1,7 +1,7 @@
 from pymongo.mongo_client import MongoClient
 from pymongo.server_api import ServerApi
 import csv
-
+from read_oplogs import read_oplogs
 
 
 class MongoDBHandler:
@@ -59,6 +59,19 @@ class MongoDBHandler:
         collection = db[collection_name]
         result = collection.insert_one(student_data)
         print(f"Inserted student record with ID: {result.inserted_id}")
+
+    def merge(self, other_system_name: str):
+        my_logs = read_oplogs('MONGODB')
+        other_logs = read_oplogs(other_system_name)
+
+        with open('oplogs.mongodb', 'a') as mongo_oplog:
+            for pk in self.primary_keys:
+                if pk in other_logs:
+                    if pk not in my_logs or other_logs[pk][0] > my_logs[pk][0]:
+                        latest_ts, latest_value = other_logs[pk]
+                        mongo_oplog.write(f"{latest_ts}, MONGODB.SET(({pk[0]},{pk[1]}), {latest_value})\n")
+                        self.set("university_db", "grades_of_students", pk, latest_value, latest_ts)
+                        print(f"Merged ({pk[0]}, {pk[1]}) from {other_system_name} into MongoDB at ts={latest_ts}")
 
     def bulk_insert_students_from_csv(self, db_name: str, collection_name: str, csv_path: str):
         student_records = []

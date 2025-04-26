@@ -1,13 +1,17 @@
 import psycopg2
 from psycopg2 import sql
 
+from read_oplogs import read_oplogs
+
 class PostgreSQLHandler:
-    def __init__(self, host: str = "localhost", port: int = 5432, database: str = "doshte", user: str = "nande", password: str = "050309"):
+    def __init__(self, host: str = "localhost", port: int = 5432, database: str = "doshte", user: str = "nande", password: str = "050309", primary_keys=None, db_logs_map=None):
         self.host = host
         self.port = port
         self.database = database
         self.user = user
         self.password = password
+        self.primary_keys = primary_keys   # 🟰 ADD THIS
+        self.db_logs_map = db_logs_map   
         self.connection = None
         self.cursor = None
         self.connect()
@@ -78,6 +82,20 @@ class PostgreSQLHandler:
         except Exception as e:
             print("Get operation failed:", e)
             return None
+
+    def merge(self, other_system_name: str):
+        my_logs = read_oplogs('POSTGRESQL')
+        other_logs = read_oplogs(other_system_name)
+        print(other_logs)
+        with open('oplogs.postgresql', 'a') as pg_oplog:
+            for pk in self.primary_keys:
+                if pk in other_logs:
+                    if pk not in my_logs or other_logs[pk][0] > my_logs[pk][0]:
+                        print(other_logs[pk])[0]
+                        latest_ts, latest_value = other_logs[pk]
+                        pg_oplog.write(f"{latest_ts}, POSTGRESQL.SET(({pk[0]},{pk[1]}), {latest_value})\n")
+                        self.set("student_course_grades", pk, latest_value, latest_ts)
+                        print(f"Merged ({pk[0]}, {pk[1]}) from {other_system_name} into PostgreSQL at ts={latest_ts}")
 
     def disconnect(self):
         try:
