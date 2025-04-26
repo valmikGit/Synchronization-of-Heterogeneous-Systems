@@ -56,7 +56,7 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int):
         mongo_handler.set("university_db", "grades_of_students", pk, value, ts)
     else:
         hive_handler.update_data(pk, value)
-    db_logs_map[db_name][pk] = (ts, value)
+    # db_logs_map[db_name][pk] = (ts, value)
 
 def read_oplogs(db: str):
     with open(f"oplogs.{db.lower()}", 'r') as file:
@@ -231,7 +231,7 @@ def parse_testcase_file(file_path):
             if db1 == "MONGODB":
                 if operation == "SET":
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
-                    # db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
                     mongo_logger = open("oplogs.mongodb", "a")
                     mongo_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     mongo_logger.close()
@@ -244,7 +244,7 @@ def parse_testcase_file(file_path):
             elif db1 == "HIVE":
                 if operation == "SET":
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
-                    # db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
                     hive_logger = open("oplogs.hive", "a")
                     hive_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     hive_logger.close()
@@ -257,7 +257,7 @@ def parse_testcase_file(file_path):
             elif db1 == "POSTGRESQL":
                 if operation == "SET":
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
-                    # db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
+                    db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
                     postgresql_logger = open("oplogs.postegresql", "a")
                     postgresql_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     postgresql_logger.close()
