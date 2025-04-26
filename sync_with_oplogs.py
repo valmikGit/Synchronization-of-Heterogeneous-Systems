@@ -11,6 +11,7 @@ from hive import Hive
 mongo_handler = MongoDBHandler()
 postgre_handler = PostgreSQLHandler()
 hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
+hive_handler.create_table('student_course_grades.csv')
 
 # Initialize 2D dictionaries using defaultdict
 mongo_logs = defaultdict(lambda: (0, ""))

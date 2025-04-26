@@ -21,9 +21,8 @@ class Hive:
 
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
-            print(f"Folder '{folder_name}' created in {current_directory}")
         else:
-            print(f"Folder '{folder_name}' already exists.")
+            pass
 
         self.current_directory = os.getcwd()
 
@@ -35,10 +34,8 @@ class Hive:
             print("HIVE_HOME is not set.")
             exit(1)
 
-        print(f"HIVE_HOME is set to: {hive_home}")
         hive_server_cmd = os.path.join(hive_home, "bin", "hiveserver2")
 
-        print("Starting HiveServer2...")
         self.hive_server_process = subprocess.Popen(
             hive_server_cmd,
             stdout=subprocess.DEVNULL,
@@ -68,61 +65,29 @@ class Hive:
     def load_csv(self, filename = 'student_course_grades.csv'):
         try:
             filepath = os.path.join(os.getcwd(), filename)
-            query = f"LOAD DATA LOCAL INPATH '{filepath}' INTO TABLE {self.temp_table}"
+            query = f"LOAD DATA LOCAL INPATH '{filepath}' INTO TABLE {self.table_name}"
             self.cursor.execute(query)
             print(f"Data loaded from {filepath} into table {self.temp_table}.")
         except Exception as e:
             print(f"Error loading data: {e}")
 
-    def create_table(self, filename):
-        self.cursor.execute(f"DROP TABLE IF EXISTS {self.temp_table}")
+    def create_table(self, filename = 'student_course_grades.csv'):
         self.cursor.execute(f"DROP TABLE IF EXISTS {self.table_name}")
-
         self.cursor.execute(f"""
-            CREATE TABLE {self.temp_table} (
-                `student-ID` STRING,
-                `course-id` STRING,
-                `roll no` STRING,
-                `email ID` STRING,
+            CREATE TABLE {self.table_name} (
+                student_id STRING,
+                course_id STRING,
+                roll_no STRING,
+                email_id STRING,
                 grade STRING
             )
             ROW FORMAT DELIMITED
             FIELDS TERMINATED BY ','
             STORED AS TEXTFILE
-            LOCATION '${self.current_directory}/mytables'
+            TBLPROPERTIES ("skip.header.line.count"="1")
         """)
-
-        self.load_csv('student_course_grades.csv')
-
-        self.cursor.execute(f"""
-            CREATE TABLE {self.table_name} (
-                `roll no` STRING,
-                `email ID` STRING,
-                grade STRING
-            )
-            PARTITIONED BY (`student-ID` STRING, `course-id` STRING)
-            STORED AS PARQUET
-            LOCATION 'file://{os.path.abspath(os.path.join(self.current_directory, "mytables"))}'
-        """)
-
-        # Enable dynamic partitioning
-        self.cursor.execute("SET hive.exec.dynamic.partition = true")
-        self.cursor.execute("SET hive.exec.dynamic.partition.mode = nonstrict")
-
-        # Insert data: Include partition columns LAST in SELECT
-        self.cursor.execute(f"""
-            INSERT OVERWRITE TABLE {self.table_name}
-            PARTITION (`student-ID`, `course-id`)
-            SELECT 
-                `roll no`, 
-                `email ID`, 
-                grade,
-                `student-ID`,   -- Partition columns must be last
-                `course-id`     -- in the SELECT list
-            FROM {self.temp_table}
-        """)
-
-        print(f"Partitioned table '{self.table_name}' created.")
+        print(f"Table '{self.table_name}' created.")
+        self.load_csv()
 
     def load_data(self, grade = None):
         temp_filename = f"temp_{uuid.uuid4().hex}.csv"
@@ -146,48 +111,55 @@ class Hive:
             if os.path.exists(temp_filename):
                 os.remove(temp_filename)
 
-    def insert_data(self, pk, grade):
-        self.student_id, self.course_id = pk
-        self.load_data(grade)
+    def select_data(self, pk=None):
+        if pk is not None:
+            self.student_id, self.course_id = pk
+        else:
+            self.student_id = None
+            self.course_id = None
 
-        print(f"Data inserted into table '{self.table_name}'.")
-
-    def delete_data(self, pk): 
-        self.student_id, self.course_id = pk  
-        self.load_data()
-
-        print(f"Data deleted from table '{self.table_name}'.")
-
-    def select_data(self, studentId=None, courseId=None):
         try:
-            if studentId and courseId:
-                query = f"SELECT * FROM {self.table_name} WHERE `student-ID` = %s AND `course-id` = %s"
-                self.cursor.execute(query, (studentId, courseId))
-            elif studentId:
-                query = f"SELECT * FROM {self.table_name} WHERE `student-ID` = %s"
-                self.cursor.execute(query, (studentId,))
-            elif courseId:
-                query = f"SELECT * FROM {self.table_name} WHERE `course-id` = %s"
-                self.cursor.execute(query, (courseId,))
+            if self.student_id and self.course_id:
+                query = f"SELECT * FROM {self.table_name} WHERE student_id = '{self.student_id}' AND course_id = '{self.course_id}'"
+                self.cursor.execute(query)
             else:
-                query = f"SELECT * FROM {self.temp_table}"
+                query = f"SELECT * FROM {self.table_name}"
                 self.cursor.execute(query)
 
             rows = self.cursor.fetchall()
-
-            if not rows:
-                print(f"No data found in table '{self.table_name}'")
-            else:
-                print(f"Data from table '{self.table_name}':")
-                for row in rows:
-                    print(row)
-
+            return rows
+        
         except hive.Error as e:
             print(f"Hive error: {e}")
+            return None
 
-    def update_data(self, pk, grade):
+    def update_data(self, pk, new_grade):
         self.student_id, self.course_id = pk
-        self.load_data(grade)
+        self.cursor.execute(f"""
+        SELECT student_id, course_id, roll_no, email_id, grade
+        FROM {self.table_name}
+        """)
+        all_rows = self.cursor.fetchall()
+        if not all_rows:
+            print("Table is empty—nothing to update.")
+            return
+
+        tmp_csv = f"/tmp/hive_update_{uuid.uuid4().hex}.csv"
+        with open(tmp_csv, 'w', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(['student_id', 'course_id', 'roll_no', 'email_id', 'grade'])
+            for sid, cid, roll, email, grade in all_rows:
+                if sid == self.student_id and cid == self.course_id:
+                    grade = new_grade
+                writer.writerow([sid, cid, roll, email, grade])
+
+        self.cursor.execute(f"""
+        LOAD DATA LOCAL INPATH '{tmp_csv}'
+        OVERWRITE INTO TABLE {self.table_name}
+        """)
+        os.remove(tmp_csv)
+
+        print(f"Updated grade for ({self.student_id}, {self.course_id}) → '{new_grade}'.")
 
     def destroy(self):
         try:
@@ -208,17 +180,6 @@ if __name__ == "__main__":
     hive_instance = Hive("student_grades", "localhost", 10000, "vaibhav", "CUSTOM", "Badminton@2468")
     hive_instance.create_table('student_course_grades.csv')
     hive_instance.select_data()
-    # hive_instance.insert_data(("IMT2023001", "CSC101"), "A")
-    # hive_instance.select_data()
-    # hive_instance.insert_data(("IMT2023001", "CSC102"), "B")
-    # hive_instance.select_data()
-    # hive_instance.insert_data(("IMT2023002", "CSC101"), "C")
-    # hive_instance.select_data()
-    # hive_instance.update_data(("IMT2023001", "CSC101"), "B")
-    # hive_instance.select_data()
-    # hive_instance.delete_data(("IMT2023001", "CSC101"))
-    # hive_instance.select_data()
-    # hive_instance.delete_data(("IMT2023001", "CSC102"))
-    # hive_instance.delete_data(("IMT2023001", "CSC102"))
+    hive_instance.update_data(('SID1128', 'CSE004'), 'A')
     hive_instance.select_data()
     hive_instance.__del__()
