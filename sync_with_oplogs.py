@@ -1,12 +1,12 @@
 import re
 import json
+import os
 import csv
 from collections import defaultdict
 import json
 from MongoDB_connect import MongoDBHandler
 from postgresql_connector import PostgreSQLHandler
 from hive import Hive
-
 
 mongo_handler = MongoDBHandler()
 postgre_handler = PostgreSQLHandler()
@@ -100,7 +100,61 @@ def read_oplogs(db: str):
                 db_set(db_name=db, pk=(student_id, course_id), value=grade, ts=db_timestamp)
 
 
-def merge(db1:str, db2:str, ts:int)->list:
+# def merge(db1:str, db2:str, ts:int)->list:
+#     """
+#     There are 2 approaches which can be used to update the timestamp after a merge operation:
+#     a) Use the timestamp when this merge was done.
+#     b) Use the latest timestamp between the two timestamps corresponding to the two databases under consideration.
+#     Here, we have used option b. 
+#     """
+#     db1_logs = db_logs_map[db1]
+#     db2_logs = db_logs_map[db2]
+
+#     for pk in primary_keys:
+#         if(db2_logs[pk][0] > db1_logs[pk][0]):
+#             print(f"Merge: {db1}({db1_logs[pk][0]}) < {db2}({db2_logs[pk][0]})")
+#             db1_oplogs = open(f"oplogs.{db1.lower()}", "a")
+#             db1_oplogs.write(f"{db2_logs[pk][0]}, {db1}.SET(({pk[0]},{pk[1]}), {db2_logs[pk][1]})")
+#             db1_oplogs.close()   
+#             db_set(db_name=db1, pk=pk, value=db2_logs[pk][1], ts=db2_logs[pk][0])
+
+def mongo_merge(db2:str, db1="MONGODB"):
+    """
+    There are 2 approaches which can be used to update the timestamp after a merge operation:
+    a) Use the timestamp when this merge was done.
+    b) Use the latest timestamp between the two timestamps corresponding to the two databases under consideration.
+    Here, we have used option b. 
+    """
+    db1_logs = db_logs_map[db1]
+    db2_logs = db_logs_map[db2]
+
+    for pk in primary_keys:
+        if(db2_logs[pk][0] > db1_logs[pk][0]):
+            print(f"Merge: {db1}({db1_logs[pk][0]}) < {db2}({db2_logs[pk][0]})")
+            db1_oplogs = open(f"oplogs.{db1.lower()}", "a")
+            db1_oplogs.write(f"{db2_logs[pk][0]}, {db1}.SET(({pk[0]},{pk[1]}), {db2_logs[pk][1]})")
+            db1_oplogs.close()   
+            db_set(db_name=db1, pk=pk, value=db2_logs[pk][1], ts=db2_logs[pk][0])
+
+def postgresql_merge(db2:str, db1="POSTGRESQL"):
+    """
+    There are 2 approaches which can be used to update the timestamp after a merge operation:
+    a) Use the timestamp when this merge was done.
+    b) Use the latest timestamp between the two timestamps corresponding to the two databases under consideration.
+    Here, we have used option b. 
+    """
+    db1_logs = db_logs_map[db1]
+    db2_logs = db_logs_map[db2]
+
+    for pk in primary_keys:
+        if(db2_logs[pk][0] > db1_logs[pk][0]):
+            print(f"Merge: {db1}({db1_logs[pk][0]}) < {db2}({db2_logs[pk][0]})")
+            db1_oplogs = open(f"oplogs.{db1.lower()}", "a")
+            db1_oplogs.write(f"{db2_logs[pk][0]}, {db1}.SET(({pk[0]},{pk[1]}), {db2_logs[pk][1]})")
+            db1_oplogs.close()   
+            db_set(db_name=db1, pk=pk, value=db2_logs[pk][1], ts=db2_logs[pk][0])
+
+def hive_merge(db2:str, db1="HIVE"):
     """
     There are 2 approaches which can be used to update the timestamp after a merge operation:
     a) Use the timestamp when this merge was done.
@@ -206,7 +260,13 @@ def parse_testcase_file(file_path):
                 print(f"{db1}.MERGE({db2})\n")
                 read_oplogs(db=db1)
                 read_oplogs(db=db2)
-                merge(db1=db1, db2=db2, ts=timestamp)
+                # merge(db1=db1, db2=db2, ts=timestamp)
+                if (db1 == "MONGODB"):
+                    mongo_merge(db2=db2)
+                elif (db2 == "POSTGRESQL"):
+                    postgresql_merge(db2=db2)
+                elif (db2 == "HIVE"):
+                    hive_merge(db2=db2)
 
     mongo_logger.close()
     postgresql_logger.close()
