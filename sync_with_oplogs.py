@@ -192,7 +192,8 @@ gc = None
 gc_file_path = "gc.txt"
 if os.path.exists(gc_file_path):
     with open(gc_file_path, 'r') as f:
-        gc = f.read()
+        gc = int(f.read())
+        gc = gc + 1
 
 def parse_testcase_file(file_path):
     with open(file_path, 'r') as file:
@@ -241,7 +242,7 @@ def parse_testcase_file(file_path):
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
                     mongo_logger = open("oplogs.mongodb", "a")
-                    if gc == None:
+                    if gc is None:
                         mongo_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     else:
                         mongo_logger.write(f"{gc}, {db1}.SET(({student_id},{course_id}), {grade})\n")
@@ -249,7 +250,7 @@ def parse_testcase_file(file_path):
                 elif operation == 'GET':
                     print(f"{db_timestamp}, {db1}.GET({student_id},{course_id}) = {db_get(db_name=db1, pk=(student_id, course_id))}\n")
                     mongo_logger = open("oplogs.mongodb", "a")
-                    if gc == None:
+                    if gc is None:
                         mongo_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     else:
                         mongo_logger.write(f"{gc}, {db1}.SET(({student_id},{course_id}), {grade})\n")
@@ -260,7 +261,7 @@ def parse_testcase_file(file_path):
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
                     hive_logger = open("oplogs.hive", "a")
-                    if gc == None:
+                    if gc is None:
                         hive_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     else:
                         hive_logger.write(f"{gc}, {db1}.SET(({student_id},{course_id}), {grade})\n")
@@ -268,7 +269,7 @@ def parse_testcase_file(file_path):
                 elif operation == 'GET':
                     print(f"{db_timestamp}, {db1}.GET({student_id},{course_id}) = {db_get(db_name=db1, pk=(student_id, course_id))}\n")
                     hive_logger = open("oplogs.hive", "a")
-                    if gc == None:
+                    if gc is None:
                         hive_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     else:
                         hive_logger.write(f"{gc}, {db1}.SET(({student_id},{course_id}), {grade})\n")
@@ -279,7 +280,7 @@ def parse_testcase_file(file_path):
                     print(f"{db_timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp)
                     postgresql_logger = open("oplogs.postgresql", "a")
-                    if gc == None:
+                    if gc is None:
                         postgresql_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     else:
                         postgresql_logger.write(f"{gc}, {db1}.SET(({student_id},{course_id}), {grade})\n")
@@ -287,7 +288,7 @@ def parse_testcase_file(file_path):
                 elif operation == 'GET':
                     print(f"{db_timestamp}, {db1}.GET({student_id},{course_id}) = {db_get(db_name=db1, pk=(student_id, course_id))}\n")
                     postgresql_logger = open("oplogs.postgresql", "a")
-                    if gc == None:
+                    if gc is None:
                         postgresql_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     else:
                         postgresql_logger.write(f"{gc}, {db1}.SET(({student_id},{course_id}), {grade})\n")
@@ -306,7 +307,8 @@ def parse_testcase_file(file_path):
                 elif (db1 == "HIVE"):
                     hive_merge(db2=db2)
 
-    with open(gc_file_path, 'w') as f:
-        f.write(gc)
+    f = open(gc_file_path, 'w')
+    f.write(gc)
+    f.close()
 
 parse_testcase_file(file_path="example_testcase_3.in")
