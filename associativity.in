@@ -1,0 +1,23 @@
+# Initial Seeding
+1, HIVE.SET((SID1190,CSE017), D)
+2, POSTGRESQL.SET((SID1190,CSE017), B)
+3, MONGODB.SET((SID1190,CSE017), A)
+
+# First branch: (Hive merge Postgres) merge Mongo
+HIVE.MERGE(POSTGRESQL)
+HIVE.MERGE(MONGODB)
+HIVE.GET(SID1190,CSE017)
+
+# Reset Hive and others to original values
+7, HIVE.SET((SID1190,CSE017), D)
+8, POSTGRESQL.SET((SID1190,CSE017), B)
+9, MONGODB.SET((SID1190,CSE017), A)
+
+# Second branch: Hive merge (Postgres merge Mongo)
+POSTGRESQL.MERGE(MONGODB)
+HIVE.MERGE(POSTGRESQL)
+12, HIVE.GET(SID1190,CSE017)
+
+# Final Step: Compare outputs of Step 6 and Step 12
+# If equal → Associativity holds
+# If not equal → Merge is not associative
