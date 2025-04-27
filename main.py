@@ -58,7 +58,7 @@ mongo_handler = MongoDBHandler(primary_keys=primary_keys)
 hive_handler = Hive("student_grades", "localhost", 10000, "vaibhav", "CUSTOM", "Badminton@2468", primary_keys=primary_keys)
 
 parse_testcase_file(
-    file_path='associativity.in',
+    file_path='example_testcase_4.in',
     mongo_handler=mongo_handler,
     hive_handler=hive_handler,
     postgre_handler=postgre_handler,
