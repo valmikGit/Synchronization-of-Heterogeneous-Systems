@@ -10,7 +10,7 @@ def read_oplogs(db: str) -> dict:
     logs = {}
     
     with open(f"oplogs.{db.lower()}", 'r') as file:
-        print(f"Reading oplogs for {db}")
+        # print(f"Reading oplogs for {db}")
         for idx, line in enumerate(file):
             line = line.strip()
             if not line:
@@ -41,11 +41,11 @@ def read_oplogs(db: str) -> dict:
                     db_name, student_id, course_id = match.groups()
                     operation = 'GET'
 
-            print(f"Operation = {operation}")
+            # print(f"Operation = {operation}")
 
             # Handle SET
             if operation == 'SET':
-                print(f"SET: {db_name} ({db_timestamp}) {student_id}, {course_id} => {grade}")
+                # print(f"SET: {db_name} ({db_timestamp}) {student_id}, {course_id} => {grade}")
                 # Only store if db matches (optional check)
                 if db_name.upper() == db.upper():
                     key = (student_id.strip(), course_id.strip())
@@ -53,7 +53,7 @@ def read_oplogs(db: str) -> dict:
 
             # Handle GET if needed (currently you don't do anything for GET)
             elif operation == 'GET':
-                print(f"GET: {db_name} ({db_timestamp}) {student_id}, {course_id}")
+                # print(f"GET: {db_name} ({db_timestamp}) {student_id}, {course_id}")
                 # Usually GET is a read, so you may not want to modify `logs`
                 pass
     return logs

@@ -10,7 +10,7 @@ from hive import Hive
 
 mongo_handler = MongoDBHandler()
 postgre_handler = PostgreSQLHandler()
-# hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
+hive_handler = Hive("student_grades", "localhost", 10000, "prat", "CUSTOM", "pc02@December")
 # hive_handler.create_table('student_course_grades.csv')
 
 # Initialize 2D dictionaries using defaultdict
@@ -188,14 +188,15 @@ def db_get(db_name:str, pk:tuple)->str:
         # return hive_handler.select_data("student_grades", pk)
     return db_logs_map[db_name][pk]
 
-gc = None
+gc = 0
+base = gc
 gc_file_path = "gc.txt"
 if os.path.exists(gc_file_path):
     with open(gc_file_path, 'r') as f:
         gc = int(f.read())
-        gc = gc + 1
+        base = gc
 
-def parse_testcase_file(file_path):
+def parse_testcase_file(file_path, gc):
     with open(file_path, 'r') as file:
         for idx, line in enumerate(file):
             line = line.strip()
@@ -203,7 +204,7 @@ def parse_testcase_file(file_path):
                 continue  # Skip empty lines
 
             # Row number becomes the timestamp
-            timestamp = idx + 1
+            timestamp = idx + 1 + gc
             gc = timestamp
             db_timestamp = None
             operation = None
@@ -308,7 +309,7 @@ def parse_testcase_file(file_path):
                     hive_merge(db2=db2)
 
     f = open(gc_file_path, 'w')
-    f.write(gc)
+    f.write(str(gc))
     f.close()
 
-parse_testcase_file(file_path="example_testcase_3.in")
+parse_testcase_file(file_path="example_testcase_3.in", gc = gc)
