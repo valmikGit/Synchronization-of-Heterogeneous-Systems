@@ -74,7 +74,7 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                     elif db1 == "POSTGRESQL":
                         value = handler.get("student_course_grades", pk=(student_id, course_id))
                     elif db1 == "HIVE":
-                        value = handler.select_data("student_grades", pk=(student_id, course_id))
+                        value = handler.select_data(pk=(student_id, course_id))
                     else:
                         value = None
                         print(f"Unknown DB for GET operation: {db1}")
