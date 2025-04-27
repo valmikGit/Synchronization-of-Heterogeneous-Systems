@@ -91,7 +91,7 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                         postgresql_logger.close()
                     elif db1 == "HIVE":
                         hive_logger = open('oplogs.hive', 'a')   
-                        hive_logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id})) = {value}\n")
+                        hive_logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id}))\n")
                         hive_logger.close()
 
 
