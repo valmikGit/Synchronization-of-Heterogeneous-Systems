@@ -4,6 +4,7 @@ import time
 from pyhive import hive
 import csv
 import uuid
+from read_oplogs import read_oplogs
 
 class Hive:
     table_name = ""
@@ -13,8 +14,9 @@ class Hive:
     course_id = ""
 
     current_directory = ""
+    primary_keys = None
 
-    def __init__(self, table_name, host, port, username, auth, password):
+    def __init__(self, table_name, host, port, username, auth, password, primary_keys=None):
         folder_name = 'mytables'
         current_directory = os.getcwd()
         folder_path = os.path.join(current_directory, folder_name)
@@ -25,6 +27,7 @@ class Hive:
             pass
 
         self.current_directory = os.getcwd()
+        self.primary_keys=primary_keys
 
         self.table_name = table_name
         self.temp_table = table_name + "_temp"
@@ -84,7 +87,9 @@ class Hive:
             ROW FORMAT DELIMITED
             FIELDS TERMINATED BY ','
             STORED AS TEXTFILE
+            LOCATION 'mytables/student_grades'
             TBLPROPERTIES ("skip.header.line.count"="1")
+
         """)
         print(f"Table '{self.table_name}' created.")
         self.load_csv()
@@ -112,6 +117,7 @@ class Hive:
                 os.remove(temp_filename)
 
     def select_data(self, pk=None):
+        print(pk)
         if pk is not None:
             self.student_id, self.course_id = pk
         else:
@@ -160,6 +166,23 @@ class Hive:
         os.remove(tmp_csv)
 
         print(f"Updated grade for ({self.student_id}, {self.course_id}) → '{new_grade}'.")
+
+
+    def merge(self, other_system_name: str):
+        my_logs = read_oplogs('HIVE')
+        other_logs = read_oplogs(other_system_name)
+
+        with open('oplogs.hive', 'a') as hive_oplog:
+            for pk in self.primary_keys:
+                if pk in other_logs:
+                    if pk not in my_logs or other_logs[pk][0] > my_logs[pk][0]:
+                        latest_ts, latest_value = other_logs[pk]
+                        hive_oplog.write(f"{latest_ts}, HIVE.UPDATE(({pk[0]},{pk[1]}), {latest_value})\n")
+                        self.update_data(pk, latest_value)
+                        print(f"Merged ({pk[0]}, {pk[1]}) from {other_system_name} into Hive at ts={latest_ts}")
+
+        hive_oplog.close()
+
 
     def destroy(self):
         try:
