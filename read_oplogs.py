@@ -1,7 +1,5 @@
 import re
 
-import re
-
 def read_oplogs(db: str) -> dict:
     """
     Read oplogs for a given db name.
