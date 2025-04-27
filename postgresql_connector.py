@@ -85,7 +85,9 @@ class PostgreSQLHandler:
 
     def merge(self, other_system_name: str):
         my_logs = read_oplogs('POSTGRESQL')
+
         other_logs = read_oplogs(other_system_name)
+        print("Vai")
         print(other_logs)
         with open('oplogs.postgresql', 'a') as pg_oplog:
             for pk in self.primary_keys:
