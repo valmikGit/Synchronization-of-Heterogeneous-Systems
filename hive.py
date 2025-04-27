@@ -177,7 +177,7 @@ class Hive:
                 if pk in other_logs:
                     if pk not in my_logs or other_logs[pk][0] > my_logs[pk][0]:
                         latest_ts, latest_value = other_logs[pk]
-                        hive_oplog.write(f"{latest_ts}, HIVE.UPDATE(({pk[0]},{pk[1]}), {latest_value})\n")
+                        hive_oplog.write(f"{latest_ts}, HIVE.SET(({pk[0]},{pk[1]}), {latest_value})\n")
                         self.update_data(pk, latest_value)
                         print(f"Merged ({pk[0]}, {pk[1]}) from {other_system_name} into Hive at ts={latest_ts}")
 

@@ -11,6 +11,9 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
         "HIVE": hive_handler,
         "POSTGRESQL": postgre_handler
     }
+    timestamp =1
+    for oplog_file in ['oplogs.mongodb', 'oplogs.postgresql', 'oplogs.hive']:
+        open(oplog_file, 'w').close()
 
     with open(file_path, 'r') as file:
         for idx, line in enumerate(file):
@@ -18,7 +21,7 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
             if not line:
                 continue
 
-            timestamp = idx + 1
+
             db_timestamp = None
             operation = None
             db1 = db2 = student_id = course_id = grade = None
@@ -66,6 +69,7 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                     hive_logger = open('oplogs.hive', 'a')
                     hive_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     hive_logger.close()
+                timestamp+=1
 
             elif operation == "GET":
                 if handler:
@@ -91,8 +95,9 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                         postgresql_logger.close()
                     elif db1 == "HIVE":
                         hive_logger = open('oplogs.hive', 'a')   
-                        hive_logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id})) = {value}\n")
+                        hive_logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id}))\n")
                         hive_logger.close()
+                    timestamp+=1
 
 
             elif operation == "MERGE":

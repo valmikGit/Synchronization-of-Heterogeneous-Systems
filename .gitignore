@@ -7,4 +7,5 @@ nosqlenv
 *.postgresql
 *.hive
 *.txt
-upload_csv.py
+test_mongo.py
+text_postgresql.py
