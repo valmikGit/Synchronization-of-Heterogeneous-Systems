@@ -82,8 +82,8 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                     print(f"{timestamp}, {db1}.GET({student_id},{course_id}) = {value}")
                     
                     if db1 == "MONGODB":
-                        mongo_loggger = open('oplogs.mongodb', 'a')
-                        mongo_loggger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id}))\n")
+                        mongo_logger = open('oplogs.mongodb', 'a')
+                        mongo_logger.write(f"{timestamp}, {db1}.GET(({student_id},{course_id}))\n")
                         mongo_logger.close()
                     elif db1 == "POSTGRESQL":
                         postgresql_logger = open('oplogs.postgresql', 'a')
