@@ -3,14 +3,9 @@ import re
 import re
 
 def read_oplogs(db: str) -> dict:
-    """
-    Read oplogs for a given db name.
-    Returns a dictionary { (student-ID, course-ID) : (timestamp, value) }
-    """
     logs = {}
     
     with open(f"oplogs.{db.lower()}", 'r') as file:
-        print(f"Reading oplogs for {db}")
         for idx, line in enumerate(file):
             line = line.strip()
             if not line:
@@ -41,7 +36,6 @@ def read_oplogs(db: str) -> dict:
                     db_name, student_id, course_id = match.groups()
                     operation = 'GET'
 
-            print(f"Operation = {operation}")
 
             # Handle SET
             if operation == 'SET':
