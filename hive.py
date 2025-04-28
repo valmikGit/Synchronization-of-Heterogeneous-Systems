@@ -140,7 +140,7 @@ class Hive:
         except hive.Error as e:
             print(f"Hive error: {e}")
 
-    def upsert_data(self, pk, new_grade):
+    def update_data(self, pk, new_grade):
         self.student_id, self.course_id = pk
         
         self.cursor.execute(f"""
