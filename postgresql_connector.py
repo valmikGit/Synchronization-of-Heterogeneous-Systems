@@ -31,21 +31,42 @@ class PostgreSQLHandler:
         except Exception as e:
             print(" Connection failed:", e)
 
+    # def set(self, table: str, pk: tuple, value: str, ts: int):
+    #     student_id, course_id = pk
+    #     print(student_id, course_id, value, ts)
+
+    #     update_query = f"""UPDATE {table} SET grade = %s WHERE "student-ID" = %s AND "course-id" = %s;"""
+
+    #     self.cursor.execute(update_query, (value, student_id, course_id))
+
+    #     if self.cursor.rowcount == 0:
+    #         print("No matching row found to update.")
+    #     elif self.cursor.rowcount == 1:
+    #         print("Row updated successfully.")
+    #     else:
+    #         print("Multiple rows updated (unexpected).")
+    #     self.connection.commit()
+
     def set(self, table: str, pk: tuple, value: str, ts: int):
         student_id, course_id = pk
         print(student_id, course_id, value, ts)
 
+        # First, try to update
         update_query = f"""UPDATE {table} SET grade = %s WHERE "student-ID" = %s AND "course-id" = %s;"""
-
         self.cursor.execute(update_query, (value, student_id, course_id))
 
         if self.cursor.rowcount == 0:
-            print("No matching row found to update.")
+            # No row updated, so insert
+            print("No matching row found to update. Inserting new row.")
+            insert_query = f"""INSERT INTO {table} ("student-ID", "course-id", grade) VALUES (%s, %s, %s);"""
+            self.cursor.execute(insert_query, (student_id, course_id, value))
         elif self.cursor.rowcount == 1:
             print("Row updated successfully.")
         else:
             print("Multiple rows updated (unexpected).")
+
         self.connection.commit()
+
 
 
 

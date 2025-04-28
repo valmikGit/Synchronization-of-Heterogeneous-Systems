@@ -1,8 +1,9 @@
 import re
+from datetime import datetime
 
 def read_oplogs(db: str) -> dict:
     logs = {}
-    
+    datetime_format = "%Y-%m-%d %H:%M:%S.%f"
     with open(f"oplogs.{db.lower()}", 'r') as file:
         # print(f"Reading oplogs for {db}")
         for idx, line in enumerate(file):
@@ -16,10 +17,13 @@ def read_oplogs(db: str) -> dict:
 
             # Check for leading timestamp (db_timestamp)
             if ',' in line:
-                parts = line.split(',', 1)
-                if parts[0].strip().isdigit():
-                    db_timestamp = int(parts[0].strip())
-                    line = parts[1].strip()
+                    parts = line.split(',', 1)
+                    try:
+                        db_timestamp = datetime.strptime(parts[0].strip(), datetime_format)
+                        line = parts[1].strip()
+                    except ValueError:
+                        # Parsing failed — handle it if needed
+                        pass
 
             # Parse SET operation
             if 'SET' in line:
