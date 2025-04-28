@@ -5,7 +5,8 @@ def db_set(db_name: str, pk: tuple, value: str, ts: int, mongo_handler=None, hiv
 
     if primary_keys and pk not in primary_keys:
         print(f"{pk} not in primary keys.")
-        return
+        primary_keys.append(pk)
+        
 
     if db_name == "POSTGRESQL":
         postgre_handler.set("student_course_grades", pk, value, ts)

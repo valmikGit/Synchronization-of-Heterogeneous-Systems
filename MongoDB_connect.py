@@ -38,10 +38,10 @@ class MongoDBHandler:
             }
         }
 
-        result = self.collection.update_one(query, update)
+        result = self.collection.update_one(query, update,upsert=True)
 
         if result.matched_count == 0:
-            print("No matching document found to update.")
+            print("No matching document found to update. Inserted new record")
         elif result.modified_count == 1:
             print("Document updated successfully.")
         else:
