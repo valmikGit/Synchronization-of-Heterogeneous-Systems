@@ -175,11 +175,10 @@ class Hive:
         with open('oplogs.hive', 'a') as hive_oplog:
             for pk in self.primary_keys:
                 if pk in other_logs:
-                    print("3")
+                   
                     if pk not in my_logs or other_logs[pk][0] > my_logs[pk][0]:
                         latest_ts, latest_value = other_logs[pk]
-                        print("HERER")
-                        print(latest_ts)
+                       
                         hive_oplog.write(f"{latest_ts}, HIVE.SET(({pk[0]},{pk[1]}), {latest_value})\n")
                         self.update_data(pk, latest_value)
                         print(f"Merged ({pk[0]}, {pk[1]}) from {other_system_name} into Hive at ts={latest_ts}")

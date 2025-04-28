@@ -49,6 +49,16 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                 if match:
                     db1, student_id, course_id = match.groups()
                     operation = 'GET'
+            elif 'FULL_SYNC' in line:
+                    # --- FULL SYNC block ---
+                    print("[INFO] Full Sync started between all databases...")
+
+                    mongo_handler.merge('HIVE')
+                    mongo_handler.merge('POSTGRESQL')
+                    hive_handler.merge('MONGODB')
+                    postgre_handler.merge('MONGODB')
+
+                    print("[INFO] Full Sync completed.")
 
             handler = system_handlers.get(db1)
 
