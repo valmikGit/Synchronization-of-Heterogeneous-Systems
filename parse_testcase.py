@@ -4,6 +4,7 @@ from hive import Hive
 from postgresql_connector import PostgreSQLHandler
 from db_set import db_set
 from db_get import db_get
+from datetime import datetime
 
 def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler, db_logs_map, primary_keys):
     system_handlers = {
@@ -11,7 +12,6 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
         "HIVE": hive_handler,
         "POSTGRESQL": postgre_handler
     }
-    timestamp =1
     for oplog_file in ['oplogs.mongodb', 'oplogs.postgresql', 'oplogs.hive']:
         open(oplog_file, 'w').close()
 
@@ -53,6 +53,7 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
             handler = system_handlers.get(db1)
 
             if operation == "SET":
+                timestamp=datetime.now()
                 print(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})")
                 db_set(db_name=db1, pk=(student_id, course_id), value=grade, ts=timestamp,
                        mongo_handler=mongo_handler, hive_handler=hive_handler, postgre_handler=postgre_handler,
@@ -69,7 +70,6 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                     hive_logger = open('oplogs.hive', 'a')
                     hive_logger.write(f"{timestamp}, {db1}.SET(({student_id},{course_id}), {grade})\n")
                     hive_logger.close()
-                timestamp+=1
 
             elif operation == "GET":
                 if handler:
@@ -82,6 +82,7 @@ def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler,
                     else:
                         value = None
                         print(f"Unknown DB for GET operation: {db1}")
+                    timestamp=datetime.now()
 
                     print(f"{timestamp}, {db1}.GET({student_id},{course_id}) = {value}")
                     
