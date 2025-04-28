@@ -70,7 +70,7 @@ class Hive:
             filepath = os.path.join(os.getcwd(), filename)
             query = f"LOAD DATA LOCAL INPATH '{filepath}' INTO TABLE {self.table_name}"
             self.cursor.execute(query)
-            print(f"Data loaded from {filepath} into table {self.temp_table}.")
+            print(f"Data loaded from {filepath} into table {self.table_name}.")
         except Exception as e:
             print(f"Error loading data: {e}")
 
@@ -125,7 +125,7 @@ class Hive:
             self.course_id = None
 
         try:
-            if self.student_id and self.course_id:
+            if pk is not None:
                 query = f"SELECT * FROM {self.table_name} WHERE student_id = '{self.student_id}' AND course_id = '{self.course_id}'"
                 self.cursor.execute(query)
             else:
@@ -133,39 +133,71 @@ class Hive:
                 self.cursor.execute(query)
 
             rows = self.cursor.fetchall()
+            for row in rows:
+                print(row)
             return rows
         
         except hive.Error as e:
             print(f"Hive error: {e}")
-            return None
 
-    def update_data(self, pk, new_grade):
+    def upsert_data(self, pk, new_grade):
         self.student_id, self.course_id = pk
+        
         self.cursor.execute(f"""
-        SELECT student_id, course_id, roll_no, email_id, grade
-        FROM {self.table_name}
+            SELECT student_id, course_id 
+            FROM {self.table_name}
+            WHERE student_id = '{self.student_id}' AND course_id = '{self.course_id}'
         """)
-        all_rows = self.cursor.fetchall()
-        if not all_rows:
-            print("Table is empty—nothing to update.")
-            return
+        existing = self.cursor.fetchall()
+        print(existing)
 
-        tmp_csv = f"/tmp/hive_update_{uuid.uuid4().hex}.csv"
-        with open(tmp_csv, 'w', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(['student_id', 'course_id', 'roll_no', 'email_id', 'grade'])
-            for sid, cid, roll, email, grade in all_rows:
-                if sid == self.student_id and cid == self.course_id:
-                    grade = new_grade
-                writer.writerow([sid, cid, roll, email, grade])
+        if existing:
+            self.cursor.execute(f"""
+                INSERT OVERWRITE TABLE {self.table_name}
+                SELECT
+                    CASE
+                        WHEN student_id = '{self.student_id}' AND course_id = '{self.course_id}' THEN '{self.student_id}'
+                        ELSE student_id
+                    END AS student_id,
+                    CASE
+                        WHEN student_id = '{self.student_id}' AND course_id = '{self.course_id}' THEN '{self.course_id}'
+                        ELSE course_id
+                    END AS course_id,
+                    roll_no,
+                    email_id, 
+                    CASE
+                        WHEN student_id = '{self.student_id}' AND course_id = '{self.course_id}' THEN '{new_grade}'
+                        ELSE grade
+                    END AS grade
+                FROM {self.table_name}
+            """)
+            print(f"Updated grade for ({self.student_id}, {self.course_id}) → '{new_grade}'.")
+        else:
+            # Record does not exist — INSERT logic
+            tmp_csv = f"/tmp/hive_insert_{uuid.uuid4().hex}.csv"
 
-        self.cursor.execute(f"""
-        LOAD DATA LOCAL INPATH '{tmp_csv}'
-        OVERWRITE INTO TABLE {self.table_name}
-        """)
-        os.remove(tmp_csv)
+            try:
 
-        print(f"Updated grade for ({self.student_id}, {self.course_id}) → '{new_grade}'.")
+                with open(tmp_csv, 'w', newline='') as f:
+                    writer = csv.writer(f)
+                    writer.writerow(['student_id', 'course_id', 'roll_no', 'email_id', 'grade'])  # Header
+                    writer.writerow([self.student_id, self.course_id, r'\N', r'\N', new_grade])   # \N = Hive NULL
+
+                # Now load this CSV into Hive
+                self.cursor.execute(f"""
+                    LOAD DATA LOCAL INPATH '{tmp_csv}'
+                    INTO TABLE {self.table_name}
+                """)
+                print(f"Inserted new record ({self.student_id}, {self.course_id}) → '{new_grade}' with roll_no and email_id NULL.")
+            
+            except Exception as e:
+                print(f"Error inserting new record: {e}")
+
+            finally:
+                if os.path.exists(tmp_csv):
+                    os.remove(tmp_csv)
+
+
 
 
     def merge(self, other_system_name: str):
@@ -205,6 +237,8 @@ if __name__ == "__main__":
     hive_instance = Hive("student_grades", "localhost", 10000, "vaibhav", "CUSTOM", "Badminton@2468")
     hive_instance.create_table('student_course_grades.csv')
     hive_instance.select_data()
-    hive_instance.update_data(('SID1128', 'CSE004'), 'A')
+    hive_instance.upsert_data(('SID1128', 'CSE004'), 'A')
     hive_instance.select_data()
-    hive_instance.__del__()
+    hive_instance.upsert_data(('IMT2023001', 'CSC101'), 'A')
+    hive_instance.select_data(('IMT2023001', 'CSC101'))
+    hive_instance.select_data()
