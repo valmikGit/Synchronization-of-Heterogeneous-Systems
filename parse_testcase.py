@@ -3,7 +3,6 @@ from MongoDB_connect import MongoDBHandler
 from hive import Hive
 from postgresql_connector import PostgreSQLHandler
 from db_set import db_set
-from db_get import db_get
 from datetime import datetime
 
 def parse_testcase_file(file_path, mongo_handler, hive_handler, postgre_handler, db_logs_map, primary_keys):
