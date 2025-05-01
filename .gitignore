@@ -7,5 +7,6 @@ nosqlenv
 *.postgresql
 *.hive
 *.txt
+!requirements.txt
 test_mongo.py
 text_postgresql.py
